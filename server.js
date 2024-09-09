@@ -1,18 +1,20 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const port = 3000;
+const port = 3225;
 const mysql = require('mysql');
+const sha1 = require('sha1');
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 app.use(cors());
 app.use(express.json());
 
+var hashedPassword;
 
 const connection = mysql.createConnection({
    host: '192.168.64.155', // L'hôte de la base de données
    user: 'apiUser', // Votre nom d'utilisateur MySQL
    password: '481spotAPI', // Votre mot de passe MySQL
-   database: 'td3' // Le nom de votre base de données
+   database: 'Lowrence' // Le nom de votre base de données
 });
 
 
@@ -37,23 +39,12 @@ const rateLimiterMiddleware = (req, res, next) => {
       next();
     })
     .catch(() => {
-      res.status(429).send('Too Many Requests');
+      res.status(429).send('Trop de requêtes !');
     });
 };
       
 app.use(rateLimiterMiddleware);
 app.use(cors());
-      
-// Configuration d'une route pour la racine "/"
-app.post('/', (req, res) => {
-  let temp =  Math.floor(Math.random() * (36 - (-10) + 1)) + (-10);
-  const response = {
-      temperature: temp,
-      unit: '°C'
-  };
-  
-  res.json(response);
-  });
   
   // Écoute du serveur sur le port spécifié
 app.listen(port, () => {
@@ -77,19 +68,31 @@ app.get('/', (req, res) => {
   });
   
 });
-app.post('/addUser', (req, res) => {
 
- const { login, mdp } = req.body;
+app.post('/register', (req, res) => {
+
+ const { login, passwd } = req.body;
           
-  if (!login || !mdp) {
-    return res.status(400).json({ message: 'login et mdp requis' });       
+  if (!login || !passwd) {
+    return res.status(400).json({ message: 'Le login et mot de passe sont tous deux requis' });       
   }
+
+  const hashed = sha1(passwd);
+  const sqlVerify = `SELECT * FROM User WHERE login = ${login} AND passwd = ${passwd}`;
+   // Exécute la requête
+   connection.query(sqlVerify, [login, hashed], (err, results) => {
+    if (err) {
+        console.error('Erreur lors de l\'exécution de la requête d\'insertion :', err);
+        res.status(500).send('Erreur lors de la vérification des données');
+        return;
+    }
+  });
           
   // Requête d'insertion
-  const sql = 'INSERT INTO User (login, mdp) VALUES (?, ?)';
+  const sql = 'INSERT INTO User (login, passwd) VALUES (?, ?)';
           
   // Exécute la requête
-  connection.query(sql, [login, mdp], (err, results) => {
+  connection.query(sql, [login, hashed], (err, results) => {
     if (err) {
         console.error('Erreur lors de l\'exécution de la requête d\'insertion :', err);
         res.status(500).send('Erreur lors de l\'insertion des données');
@@ -101,8 +104,34 @@ app.post('/addUser', (req, res) => {
     req.body.success = true;
     res.json(req.body);
   });
-          
-          
+                 
 });
+
+app.post('/login', (req, res) => {
+
+  const { login, passwd } = req.body;
+           
+   if (!login || !passwd) {
+     return res.status(400).json({ message: 'Le login et mot de passe sont tous deux requis' });       
+   }
+ 
+   const hashed = sha1(passwd);
+   const sql = `SELECT * FROM User WHERE login = ${login} AND passwd = ${passwd}`;
+           
+   // Exécute la requête
+   connection.query(sql, [login, hashed], (err, results) => {
+     if (err) {
+         console.error('Erreur lors de l\'exécution de la requête d\'insertion :', err);
+         res.status(500).send('Erreur lors de l\'insertion des données');
+         return;
+     }
+           
+     //je rajoute au json une cles success à true que j'utilise dans le front
+     //cette clé me permetra de vérifier que l'api s'est bien déroulé
+     req.body.success = true;
+     res.json(req.body);
+   });
+                  
+ });
 
        
