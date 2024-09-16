@@ -78,7 +78,7 @@ app.post('/register', (req, res) => {
   }
 
   const hashed = sha1(passwd);
-  const sqlVerify = `SELECT * FROM User WHERE login = ${login} AND passwd = ${passwd}`;
+  const sqlVerify = `SELECT * FROM User WHERE login = "${login}" AND passwd = "${passwd}"`;
    // Exécute la requête
    connection.query(sqlVerify, [login, hashed], (err, results) => {
     if (err) {
