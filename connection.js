@@ -9,6 +9,7 @@ document.getElementById('submitButton').addEventListener('click', function() {
 
     const data = { login, passwd };
 
+    // Requête connexion
     fetch('http://192.168.64.155:3225/login', {
         method: 'POST',
         headers: {

@@ -9,6 +9,7 @@ document.getElementById('registerButton').addEventListener('click', function(eve
         passwd: password
     };
 
+    // Requête inscription
     fetch('http://192.168.64.155:3225/register', {
         method: 'POST',
         headers: {

@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-
+// Initialisation de la connexion à la BDD
 const db = mysql.createConnection({
     host: '192.168.64.155',
     user: 'apiUser',
@@ -30,6 +30,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Codes d'erreur possibles
 const customErrors = {
   'ERR_USER_NOT_FOUND': 'Utilisateur non trouvé',
   'ERR_INVALID_CREDENTIALS': 'Crédentiels de login invalides',
@@ -135,5 +136,5 @@ const port = 3225;
 
 // Port serveur
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Serveur est en cours sur le port ${port}`);
 });
